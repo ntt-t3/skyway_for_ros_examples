@@ -7,6 +7,58 @@ def find_free_port():
         return s.server_address[1]
 
 
+def create_call_query(peer_id, token, target_id):
+    video_port = find_free_port()
+    video_rtcp_port = find_free_port()
+    audio_port = find_free_port()
+    audio_rtcp_port = find_free_port()
+
+    answer_query = (
+        "{"
+        '    "request_type":"MEDIA",'
+        '    "command":"CALL",'
+        '    "params":{'
+        f'       "peer_id":"{peer_id}",'
+        f'       "token":"{token}",'
+        f'       "target_id":"{target_id}",'
+        '        "constraints":{'
+        '            "video_params":{'
+        '                "band_width":1500,'
+        '                "codec":"H264",'
+        '                "payload_type":96,'  # ここで指定するpayload_typeはgStreamerで指定するものと一致させること。番号はRFCに沿っていれば何番でもよい
+        '                "sampling_rate":90000'
+        "            },"
+        '            "audio_params":{'
+        '                "band_width":1500,'
+        '                "codec":"OPUS",'
+        '                "payload_type":111,'  # ここで指定するpayload_typeはgStreamerで指定するものと一致させること。番号はRFCに沿っていれば何番でもよい
+        '                "sampling_rate":48000'
+        "            }"
+        "        },"
+        '        "redirect_params":{'
+        '            "video":{'
+        '               "ip_v4":"127.0.0.1",'
+        f'               "port":{video_port}'
+        "            },"
+        '            "video_rtcp":{'
+        '                "ip_v4":"127.0.0.1",'
+        f'                "port":{video_rtcp_port}'
+        "            },"
+        '            "audio":{'
+        '                "ip_v4":"127.0.0.1",'
+        f'               "port":{audio_port}'
+        "            },"
+        '            "audio_rtcp":{'
+        '                "ip_v4":"127.0.0.1",'
+        f'               "port":{audio_rtcp_port}'
+        "            }"
+        "        }"
+        "    }"
+        "}"
+    )
+    return answer_query
+
+
 def create_answer_query(media_connection_id):
     video_port = find_free_port()
     video_rtcp_port = find_free_port()
@@ -24,13 +76,13 @@ def create_answer_query(media_connection_id):
         '                "video_params":{'
         '                    "band_width":1500,'
         '                    "codec":"H264",'
-        '                    "payload_type":96,'
+        '                    "payload_type":96,'  # ここで指定するpayload_typeはgStreamerで指定するものと一致させること。番号はRFCに沿っていれば何番でもよい
         '                    "sampling_rate":90000'
         "                },"
         '                "audio_params":{'
         '                    "band_width":1500,'
         '                    "codec":"OPUS",'
-        '                    "payload_type":111,'
+        '                    "payload_type":111,'  # ここで指定するpayload_typeはgStreamerで指定するものと一致させること。番号はRFCに沿っていれば何番でもよい
         '                    "sampling_rate":48000'
         "                }"
         "            },"
