@@ -73,6 +73,20 @@ class EventListener(threading.Thread):
         if not event["is_success"]:
             return
 
+        # このイベント発火後、データの転送を行っても良い
+        if event["result"]["event"] == "OPEN":
+            # DataConnectionのstatus取得
+            data_connection_status_request = create_data_status_request(
+                event["result"]["data_connection_id"]
+            )
+            data_connection_status_response = skyway_control(
+                data_connection_status_request
+            )
+            rospy.loginfo("DataConnection Status")
+            rospy.loginfo(data_connection_status_response)
+
+            rospy.loginfo("you can send data now")
+
         if event["result"]["event"] == "CLOSE":
             rospy.loginfo(
                 f"DataConnection {event['result']['data_connection_id']} disconnected"

@@ -63,7 +63,10 @@ class EventListener(threading.Thread):
                     self._media_event_react(event)
 
     def _peer_event_react(self, event, has_data_config, has_media_config):
-        if event["result"]["event"] == "CLOSE":
+        # このイベント発火後、データの転送を行っても良い
+        if event["result"]["event"] == "OPEN":
+            rospy.loginfo("you can send data now")
+        elif event["result"]["event"] == "CLOSE":
             # Terminate this program when the release of the peer object is confirmed.
             self._is_running = False
             # SkyWay for ROSを落とす
@@ -72,12 +75,28 @@ class EventListener(threading.Thread):
             )
             rospy.signal_shutdown("finish")
         elif event["result"]["event"] == "CONNECTION":
-            if not has_data_config:
-                return
-
             data_connection_id = event["result"]["data_params"][
                 "data_connection_id"
             ]
+
+            # DataConnectionのstatusを取得する
+            # data_calleeではOPENイベントの中で行っているが、
+            # SkyWayではCONNECTIONイベント発火時に既にDataConnectionが確立されているので、
+            # この時点でstatusの取得が可能である
+            data_connection_status_request = create_data_status_request(
+                data_connection_id
+            )
+            data_connection_status_response = skyway_control(
+                data_connection_status_request
+            )
+            rospy.loginfo("DataConnection Status")
+            rospy.loginfo(data_connection_status_response)
+
+            # データの受信設定を行う
+            # configファイルで与えられていない場合はスキップする
+            if not has_data_config:
+                return
+
             if "metadata" not in event["result"]["status"]:
                 return
 

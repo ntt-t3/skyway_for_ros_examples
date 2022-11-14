@@ -53,3 +53,15 @@ def redirect_request(data_connection_id, plugin_info):
         "   }"
         "}"
     )
+
+
+def create_data_status_request(data_connection_id):
+    return (
+        "{"
+        '    "request_type":"DATA",'
+        '    "command":"STATUS",'
+        '    "params":{'
+        f'       "data_connection_id":"{data_connection_id}"'
+        "    }"
+        "}"
+    )
