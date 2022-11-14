@@ -102,58 +102,74 @@ class EventListener(threading.Thread):
             rospy.loginfo("MediaConnection Status")
             rospy.loginfo(media_status_response)
 
-            # STREAMイベントが発火したあとはメディアの転送を行って良いので、gStreamerを起動する
-            # メディアの送信先情報をeventパラメータから取得する
-            video_send_params = event["result"]["send_params"]["video"]
-            video_send_ip = video_send_params["media"]["ip_v4"]
-            video_send_port = video_send_params["media"]["port"]
-            video_send_rtcp_ip = video_send_params["rtcp"]["ip_v4"]
-            video_send_rtcp_port = video_send_params["rtcp"]["port"]
+            # STREAMイベントが発火したあとはメディアの転送を行って良い
+            # メディアの送信先情報に関しては、eventパラメータから取得できる。
+            # このサンプルでは、取得した情報を用いて、config内のスクリプトを置き換え、gStreamerを起動している
 
-            audio_send_params = event["result"]["send_params"]["audio"]
-            audio_send_ip = audio_send_params["media"]["ip_v4"]
-            audio_send_port = audio_send_params["media"]["port"]
-            audio_send_rtcp_ip = audio_send_params["rtcp"]["ip_v4"]
-            audio_send_rtcp_port = audio_send_params["rtcp"]["port"]
-
-            redirect_params = event["result"]["redirect_params"]
-            video_redirect_ip = redirect_params["video"]["ip_v4"]
-            video_redirect_port = redirect_params["video"]["port"]
-            video_redirect_rtcp_ip = redirect_params["video_rtcp"]["ip_v4"]
-            video_redirect_rtcp_port = redirect_params["video_rtcp"]["port"]
-
-            audio_redirect_ip = redirect_params["audio"]["ip_v4"]
-            audio_redirect_port = redirect_params["audio"]["port"]
-            audio_redirect_rtcp_ip = redirect_params["audio_rtcp"]["ip_v4"]
-            audio_redirect_rtcp_port = redirect_params["audio_rtcp"]["port"]
-
+            # スクリプトの取得
             script = rospy.get_param(rospy.get_name() + "/media/gst_script")
-            script = script.replace(
-                "SRC_VIDEO_RTP_PORT", str(video_redirect_port)
-            )
-            script = script.replace(
-                "SRC_VIDEO_RTCP_PORT", str(video_redirect_rtcp_port)
-            )
-            script = script.replace(
-                "SRC_AUDIO_RTP_PORT", str(audio_redirect_port)
-            )
-            script = script.replace(
-                "SRC_AUDIO_RTCP_PORT", str(audio_redirect_rtcp_port)
-            )
-            script = script.replace(
-                "DEST_VIDEO_RTP_PORT", str(video_send_port)
-            )
-            script = script.replace(
-                "DEST_AUDIO_RTP_PORT", str(audio_send_port)
-            )
-            script = script.replace(
-                "DEST_VIDEO_RTCP_PORT", str(video_send_rtcp_port)
-            )
-            script = script.replace(
-                "DEST_AUDIO_RTCP_PORT", str(audio_send_rtcp_port)
-            )
-            script = script.replace("DEST", video_send_ip)
 
+            # videoの送信先情報の取得
+            video_send_params = parse_media_info(
+                event["result"]["send_params"]["video"]["media"]
+            )
+            # video RTPの送信先ポートの情報をセット
+            script = script.replace(
+                "DEST_VIDEO_RTP_PORT", str(video_send_params[1])
+            )
+            # video RTCPの送信先ポートの情報をセット
+            script = script.replace(
+                "DEST_VIDEO_RTCP_PORT", str(video_send_params[3])
+            )
+            # videoの送信先はaudioと同じであるため最後に一回置換する
+
+            # audioの送信先情報の取得
+            audio_send_params = parse_media_info(
+                event["result"]["send_params"]["audio"]["media"]
+            )
+            # audio RTPの送信先ポートの情報をセット
+            script = script.replace(
+                "DEST_AUDIO_RTP_PORT", str(audio_send_params[1])
+            )
+            # audio RTCPの送信先ポートの情報をセット
+            script = script.replace(
+                "DEST_AUDIO_RTCP_PORT", str(audio_send_params[3])
+            )
+            # audioの送信先はvideoと同じであるため最後に一回置換する
+
+            # videoの受信ポートの取得
+            # videoストリームはこのIPアドレスとポート番号に転送される
+            video_recv_params = parse_media_info(
+                event["result"]["redirect_params"]["video"]
+            )
+            # video RTPの受信ポートをセット
+            script = script.replace(
+                "SRC_VIDEO_RTP_PORT", str(video_recv_params[1])
+            )
+            # video RTCPの受信ポートをセット
+            script = script.replace(
+                "SRC_VIDEO_RTCP_PORT", str(video_recv_params[3])
+            )
+
+            # audioの受信ポートの取得
+            # audioストリームはこのIPアドレスとポート番号に転送される
+            audio_recv_params = parse_media_info(
+                event["result"]["redirect_params"]["audio"]
+            )
+            # audio RTPの受信ポートをセット
+            script = script.replace(
+                "SRC_AUDIO_RTP_PORT", str(audio_recv_params[1])
+            )
+            # audio RTCPの受信ポートをセット
+            script = script.replace(
+                "SRC_AUDIO_RTCP_PORT", str(audio_recv_params[3])
+            )
+
+            # video, audioの送信先IPアドレスのセット
+            # RTCPの送信先IPアドレスも取得している(Tupleの3つめ)が、今回の構成だと同じなので、スクリプト上で省略している
+            script = script.replace("DEST", str(video_send_params[0]))
+
+            # gStreamer起動サービスのコール
             (result, pid) = gst_launch("LAUNCH", script, 0)
             if result:
                 self._pid_map[event["result"]["media_connection_id"]] = pid

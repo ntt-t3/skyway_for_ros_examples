@@ -121,3 +121,16 @@ def create_media_status_request(media_connection_id):
         "    }"
         "}"
     )
+
+
+def parse_media_info(object):
+    return (
+        # RTPの送信先IPアドレス
+        object["ip_v4"],
+        # RTPの送信先ポート
+        object["port"],
+        # RTCPの送信先IPアドレス
+        object["ip_v4"],
+        # RTCPの送信先ポート
+        object["port"],
+    )
