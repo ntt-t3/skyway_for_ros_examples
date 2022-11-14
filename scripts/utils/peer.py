@@ -24,3 +24,16 @@ def delete_peer_request(peer_id, token):
         "   }"
         "}"
     )
+
+
+def create_peer_status_request(peer_id, token):
+    return (
+        "{"
+        '   "request_type": "PEER",'
+        '   "command": "STATUS",'
+        '   "params": {'
+        f'       "peer_id": "{peer_id}", '
+        f'       "token": "{token}"'
+        "  }"
+        "}"
+    )

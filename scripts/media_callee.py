@@ -177,6 +177,12 @@ def main():
         peer_id = peer_create_response["result"]["peer_id"]
         token = peer_create_response["result"]["token"]
 
+        # Peer Statusのチェックをする場合
+        # 接続済みなので、disconnectedはFalseになっているのが正しい
+        status_request = create_peer_status_request(peer_id, token)
+        status_response = skyway_control(status_request)
+        rospy.loginfo(status_response)
+
         # hook ctrl-c to delete the peer object when exiting
         signal.signal(signal.SIGINT, signal_handler(peer_id, token))
 
