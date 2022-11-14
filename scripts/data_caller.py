@@ -123,6 +123,7 @@ def main():
         # 接続済みなので、disconnectedはFalseになっているのが正しい
         status_request = create_peer_status_request(peer_id, token)
         status_response = skyway_control(status_request)
+        rospy.loginfo("Peer Object has been created")
         rospy.loginfo(status_response)
 
         # DataConnectionの確立を開始する
