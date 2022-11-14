@@ -94,6 +94,16 @@ class EventListener(threading.Thread):
             return
 
         if event["result"]["event"] == "STREAM":
+            # media connectionのstatusを取得
+            media_status_request = create_media_status_request(
+                event["result"]["media_connection_id"]
+            )
+            media_status_response = skyway_control(media_status_request)
+            rospy.loginfo("MediaConnection Status")
+            rospy.loginfo(media_status_response)
+
+            # STREAMイベントが発火したあとはメディアの転送を行って良いので、gStreamerを起動する
+            # メディアの送信先情報をeventパラメータから取得する
             video_send_params = event["result"]["send_params"]["video"]
             video_send_ip = video_send_params["media"]["ip_v4"]
             video_send_port = video_send_params["media"]["port"]

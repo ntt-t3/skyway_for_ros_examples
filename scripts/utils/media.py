@@ -109,3 +109,15 @@ def create_answer_query(media_connection_id):
         "}"
     )
     return answer_query
+
+
+def create_media_status_request(media_connection_id):
+    return (
+        "{"
+        '    "request_type":"MEDIA",'
+        '    "command":"STATUS",'
+        '    "params":{'
+        f'       "media_connection_id":"{media_connection_id}"'
+        "    }"
+        "}"
+    )
