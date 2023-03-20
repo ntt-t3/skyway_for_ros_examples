@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import rospy
@@ -26,7 +26,7 @@ class EventListener(threading.Thread):
     _pid_map = {}
 
     def __init__(self, peer_id, token):
-        super().__init__()
+        threading.Thread.__init__(self)
         self._peer_id = peer_id
         self._token = token
 
@@ -73,23 +73,9 @@ class EventListener(threading.Thread):
         if not event["is_success"]:
             return
 
-        # このイベント発火後、データの転送を行っても良い
-        if event["result"]["event"] == "OPEN":
-            # DataConnectionのstatus取得
-            data_connection_status_request = create_data_status_request(
-                event["result"]["data_connection_id"]
-            )
-            data_connection_status_response = skyway_control(
-                data_connection_status_request
-            )
-            rospy.loginfo("DataConnection Status")
-            rospy.loginfo(data_connection_status_response)
-
-            rospy.loginfo("you can send data now")
-
         if event["result"]["event"] == "CLOSE":
             rospy.loginfo(
-                f"DataConnection {event['result']['data_connection_id']} disconnected"
+                "DataConnection %s disconnected" % event['result']['data_connection_id']
             )
 
     def _media_event_react(self, event):
@@ -119,14 +105,6 @@ def main():
         peer_id = peer_create_response["result"]["peer_id"]
         token = peer_create_response["result"]["token"]
 
-        # Peer Statusのチェックをする場合
-        # 接続済みなので、disconnectedはFalseになっているのが正しい
-        status_request = create_peer_status_request(peer_id, token)
-        status_response = skyway_control(status_request)
-        rospy.loginfo("Peer Object has been created")
-        rospy.loginfo(status_response)
-
-        # DataConnectionの確立を開始する
         message = create_connect_request(
             peer_id,
             token,
@@ -137,10 +115,7 @@ def main():
                     {"plugin_name": "string_loopback::StringLoopback"}
                 ],
             },
-            json.loads('{"foo": "bar"}'),
-            "da-50a32bab-b3d9-4913-8e20-f79c90a6a211",
-            "127.0.0.1",
-            10000,
+            json.loads('{"foo": "bar"}')
         )
         response = skyway_control(message)
 

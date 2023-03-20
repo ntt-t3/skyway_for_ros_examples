@@ -1,15 +1,18 @@
+# -*- coding: utf-8 -*-
+
+
 def create_peer_request(peer_id, api_key):
     return (
         "{"
         '  "request_type":"PEER",'
         '  "command":"CREATE",'
         '  "params":{'
-        f'      "key":"{api_key}",'
+        '      "key":"%s",'
         '      "domain":"localhost",'
-        f'      "peer_id":"{peer_id}",'
+        '      "peer_id":"%s",'
         '      "turn":false'
         "  }"
-        "}"
+        "}" % (api_key, peer_id)
     )
 
 
@@ -19,10 +22,10 @@ def delete_peer_request(peer_id, token):
         '   "request_type": "PEER", '
         '   "command": "DELETE", '
         '   "params": {'
-        f'       "peer_id": "{peer_id}",'
-        f'       "token": "{token}"'
+        '       "peer_id": "%s",'
+        '       "token": "%s"'
         "   }"
-        "}"
+        "}" % (peer_id, token)
     )
 
 
@@ -32,8 +35,8 @@ def create_peer_status_request(peer_id, token):
         '   "request_type": "PEER",'
         '   "command": "STATUS",'
         '   "params": {'
-        f'       "peer_id": "{peer_id}", '
-        f'       "token": "{token}"'
+        '       "peer_id": "%s", '
+        '       "token": "%s"'
         "  }"
-        "}"
+        "}" % (peer_id, token)
     )

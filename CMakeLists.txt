@@ -8,4 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   skyway
   std_msgs
+  gstreamer_launcher
 )
+
+catkin_package()

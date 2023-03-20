@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import rospy
@@ -28,7 +28,7 @@ class EventListener(threading.Thread):
     _pid_map = {}
 
     def __init__(self, peer_id, token):
-        super().__init__()
+        threading.Thread.__init__(self)
         self._peer_id = peer_id
         self._token = token
         self._plugin_manager = PluginManager()
@@ -42,7 +42,6 @@ class EventListener(threading.Thread):
 
         while self._is_running:
             event = skyway_event(self._peer_id, self._token)
-
             if event is None:
                 continue
             if "result" not in event:
@@ -63,10 +62,7 @@ class EventListener(threading.Thread):
                     self._media_event_react(event)
 
     def _peer_event_react(self, event, has_data_config, has_media_config):
-        # このイベント発火後、データの転送を行っても良い
-        if event["result"]["event"] == "OPEN":
-            rospy.loginfo("you can send data now")
-        elif event["result"]["event"] == "CLOSE":
+        if event["result"]["event"] == "CLOSE":
             # Terminate this program when the release of the peer object is confirmed.
             self._is_running = False
             # SkyWay for ROSを落とす
@@ -75,28 +71,12 @@ class EventListener(threading.Thread):
             )
             rospy.signal_shutdown("finish")
         elif event["result"]["event"] == "CONNECTION":
-            data_connection_id = event["result"]["data_params"][
-                "data_connection_id"
-            ]
-
-            # DataConnectionのstatusを取得する
-            # data_calleeではOPENイベントの中で行っているが、
-            # SkyWayではCONNECTIONイベント発火時に既にDataConnectionが確立されているので、
-            # この時点でstatusの取得が可能である
-            data_connection_status_request = create_data_status_request(
-                data_connection_id
-            )
-            data_connection_status_response = skyway_control(
-                data_connection_status_request
-            )
-            rospy.loginfo("DataConnection Status")
-            rospy.loginfo(data_connection_status_response)
-
-            # データの受信設定を行う
-            # configファイルで与えられていない場合はスキップする
             if not has_data_config:
                 return
 
+            data_connection_id = event["result"]["data_params"][
+                "data_connection_id"
+            ]
             if "metadata" not in event["result"]["status"]:
                 return
 
@@ -145,13 +125,6 @@ def main():
         # succeed to create a peer object
         peer_id = peer_create_response["result"]["peer_id"]
         token = peer_create_response["result"]["token"]
-
-        # Peer Statusのチェックをする場合
-        # 接続済みなので、disconnectedはFalseになっているのが正しい
-        status_request = create_peer_status_request(peer_id, token)
-        status_response = skyway_control(status_request)
-        rospy.loginfo("Peer Object has been created")
-        rospy.loginfo(status_response)
 
         # hook ctrl-c to delete the peer object when exiting
         signal.signal(signal.SIGINT, signal_handler(peer_id, token))

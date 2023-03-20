@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import sys
@@ -30,7 +30,7 @@ class EventListener(threading.Thread):
     _pid_map = {}
 
     def __init__(self, peer_id, token):
-        super().__init__()
+        threading.Thread.__init__(self)
         self._peer_id = peer_id
         self._token = token
 

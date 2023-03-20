@@ -1,10 +1,15 @@
+# -*- coding: utf-8 -*-
+
 import json
-import socketserver
+import socket
+from contextlib import closing
 
 
 def find_free_port():
-    with socketserver.TCPServer(("localhost", 0), None) as s:
-        return s.server_address[1]
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+        s.bind(("", 0))
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        return s.getsockname()[1]
 
 
 def create_call_query(peer_id, token, target_id):
@@ -18,9 +23,9 @@ def create_call_query(peer_id, token, target_id):
         '    "request_type":"MEDIA",'
         '    "command":"CALL",'
         '    "params":{'
-        f'       "peer_id":"{peer_id}",'
-        f'       "token":"{token}",'
-        f'       "target_id":"{target_id}",'
+        '       "peer_id":"%s",'
+        '       "token":"%s",'
+        '       "target_id":"%s",'
         '        "constraints":{'
         '            "video_params":{'
         '                "band_width":1500,'
@@ -38,23 +43,32 @@ def create_call_query(peer_id, token, target_id):
         '        "redirect_params":{'
         '            "video":{'
         '               "ip_v4":"127.0.0.1",'
-        f'               "port":{video_port}'
+        '               "port":%d'
         "            },"
         '            "video_rtcp":{'
         '                "ip_v4":"127.0.0.1",'
-        f'                "port":{video_rtcp_port}'
+        '                "port":%d'
         "            },"
         '            "audio":{'
         '                "ip_v4":"127.0.0.1",'
-        f'               "port":{audio_port}'
+        '               "port":%d'
         "            },"
         '            "audio_rtcp":{'
         '                "ip_v4":"127.0.0.1",'
-        f'               "port":{audio_rtcp_port}'
+        '               "port":%d'
         "            }"
         "        }"
         "    }"
         "}"
+        % (
+            peer_id,
+            token,
+            target_id,
+            video_port,
+            video_rtcp_port,
+            audio_port,
+            audio_rtcp_port,
+        )
     )
     return answer_query
 
@@ -70,7 +84,7 @@ def create_answer_query(media_connection_id):
         '    "request_type":"MEDIA",'
         '    "command":"ANSWER",'
         '    "params":{'
-        f'        "media_connection_id":"{media_connection_id}",'
+        '        "media_connection_id":"%s",'
         '        "answer_query":{'
         '            "constraints":{'
         '                "video_params":{'
@@ -89,24 +103,31 @@ def create_answer_query(media_connection_id):
         '            "redirect_params":{'
         '                "video":{'
         '                    "ip_v4":"127.0.0.1",'
-        f'                    "port":{video_port}'
+        '                    "port":%d'
         "                },"
         '                "video_rtcp":{'
         '                    "ip_v4":"127.0.0.1",'
-        f'                    "port":{video_rtcp_port}'
+        '                    "port":%d'
         "                },"
         '                "audio":{'
         '                    "ip_v4":"127.0.0.1",'
-        f'                    "port":{audio_port}'
+        '                    "port":%d'
         "                },"
         '                "audio_rtcp":{'
         '                    "ip_v4":"127.0.0.1",'
-        f'                    "port":{audio_rtcp_port}'
+        '                    "port":%d'
         "                }"
         "            }"
         "        }"
         "    }"
         "}"
+        % (
+            media_connection_id,
+            video_port,
+            video_rtcp_port,
+            audio_port,
+            audio_rtcp_port,
+        )
     )
     return answer_query
 
@@ -117,9 +138,9 @@ def create_media_status_request(media_connection_id):
         '    "request_type":"MEDIA",'
         '    "command":"STATUS",'
         '    "params":{'
-        f'       "media_connection_id":"{media_connection_id}"'
+        '       "media_connection_id":"%s"'
         "    }"
-        "}"
+        "}" % media_connection_id
     )
 
 
