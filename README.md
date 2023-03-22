@@ -22,9 +22,10 @@ SkyWay for ROSを利用し、ROSをインストールしたロボット用PC(以
 4. Google ChromeなどのPCでhttp://localhost:8000に接続する
 
 ### ROS側PC
-1. [WebRTC Gateway](https://github.com/skyway/skyway-webrtc-gateway/releases/tag/0.4.1)をダウンロードし、起動する
-2. catkin_makeを実行する
-3. 依存ライブラリのインストールを行う
+1. [gstreamer_launcher](https://github.com/ntt-t3/gstreamer_launcher)及びこのリポジトリをcatkinのsrcディレクトリに配置し、noetic, melodicの必要なツリーにスイッチする。
+2. [WebRTC Gateway](https://github.com/skyway/skyway-webrtc-gateway/releases/tag/0.4.1)をダウンロードし、起動する
+3. catkin_makeを実行する
+4. 依存ライブラリのインストールを行う
 ```
 sudo apt-get install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-pulseaudio
 ```
